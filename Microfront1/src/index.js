@@ -2,6 +2,8 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import EventBus from '../../Utils/event-bus';
 
+const eventBus = new EventBus('SubmitEventBus');
+
 const App = () => {
   const [success, setSuccess] = React.useState(false);
 
@@ -9,7 +11,7 @@ const App = () => {
     e.preventDefault();
     setSuccess(true);
 
-    EventBus.publish('submit/1', { requestId: 10 });
+    eventBus.publish('submit/1', { requestId: 10 });
   };
 
   React.useEffect(() => {
@@ -17,10 +19,32 @@ const App = () => {
       if (data?.requestId) {
         setSuccess(true);
       }
-      console.log('Microfront1: Получены данные:', data);
+      console.log('Microfront1/submit/2: Получены данные:', data);
     };
 
-    const unsubscribe = EventBus.subscribe('submit/2', handleEvent);
+    const unsubscribe = eventBus.subscribe('submit/2', handleEvent);
+
+    if (success) {
+      unsubscribe();
+    }
+
+    return () => unsubscribe();
+  }, [success]);
+
+  React.useEffect(() => {
+    const handleEvent = (data) => {
+      if (!data?.fromBroadcast) return;
+      if (data?.requestId) {
+        setSuccess(true);
+      }
+      console.log('Microfront1/submit/1: Получены данные:', data);
+    };
+
+    const unsubscribe = eventBus.subscribe('submit/1', handleEvent);
+
+    if (success) {
+      unsubscribe();
+    }
 
     return () => unsubscribe();
   }, [success]);
